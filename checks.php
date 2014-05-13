@@ -5,19 +5,6 @@
 	//	created by: 	Vincent Agresti
 	//	program name:	Consultant Check Program
 	//	short summary:	This program allows for administrators to monitor and document the printer checks and towers desk logins with ease.
-	//	changelog:		01/27/14: Basic Viewing, Searching and Status Updating Features Created
-	//					01/31/14: Admin Adding, Editing and Deleting Created.  Program now fully functional and usable
-	//					02/03/14: Filtering by Con-Type & Completion Status added.  Auto-Filters based on Sessions Variables
-	//					02/10/14: Corrected bug in priority checks for pulling accurate checks
-	//					02/12/14: Added use of HTML organization tags, CSS usage and modifications to HTML for CSS Classes
-	//					02/17/14: Condensed Display Tables, Removed Redundant Fields, Modified Note Field
-	//					02/18/14: Added Multiple Shift Adding and Split Towers Lobby Adding Off
-	//					02/27/14: Added Active Employee Options, 'Completed Check' Search and Alternating CSS for Shifts Display
-	//					03/04/14: Updated Towers Lobby Mass Add and Fixed Kiosk Alternating CSS Bug, Message & Error Printer Implemented, Error Checking Added
-	//					03/10/14: Added Custom Shift Form, Removed Add Single Shift Forms
-	//					03/12/14: Implemented MySQLi to replace MySQL Depreciated Functions, Fixed DST Bug
-	//					03/17/14: Fixed MySQLi issues with Add Shifts Functions, Altered Message Output for Adding Shifts to Reduce Redundancy
-	//					05/08/14: Added Active Locations Marker, Updated Shifts for Summer, Added Towers Active Marker, Added JQuery
 	//
 	// GLOBALS-----------------------------------------------------------------------------
 	$connection = new mysqli("localhost","root","","mydb");
@@ -135,7 +122,7 @@
 		echo "</div>
 		<footer>
 				<div class='footLinks'>
-					<a href='checks.php'>[priority]</a> <a href='checks.php?menu=checks'>[checks]</a> <a href='checks.php?menu=add'>[add shifts]</a> <a href='checks.php?menu=stats'>[stats]</a>
+					<a href='checks.php'>[priority]</a> <a href='checks.php?menu=checks'>[checks]</a> <a href='checks.php?menu=add'>[add shifts]</a>
 					</div>
 					<div class='displayGroups'>";
 		if ($displayMode == "LabCons")
@@ -1365,10 +1352,6 @@
 		{
 			echo "<h1>Please Select a Con Type</h1><br/><a href=checks.php?display=LabCons&menu=add><strong>LabCons Only</strong></a><br/><a href=checks.php?display=TechCons&menu=add><strong>TechCons Only</strong></a>";
 		}
-	}
-	else if ($displayType == "stats")	//UNDER CONSTRUCTION
-	{
-		echo "<h1>Under Construction</h1>";
 	}
 	else
 	{
