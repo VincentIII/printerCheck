@@ -1,0 +1,178 @@
+@charset "utf-8";	/* CSS Document */
+
+/* General Rules */
+
+body 
+{
+	color:#2a2a2a;
+	text-align:left;
+	font-family:arial;
+	font-size:14px;
+}
+
+a:link
+{
+	color:#2a2a2a;
+}
+
+a:visited
+{
+	color:#2a2a2a;
+}
+
+a:hover
+{
+	color:#444444;
+}
+
+a:active
+{
+	color:#2a2a2a;
+}
+
+strong
+{
+	font-weight:bold;
+}
+
+em
+{
+	font-style:italic;
+	text-transform:lowercase;
+}
+
+h1
+{
+	font-weight:bold;
+	font-size:24px;
+	text-align:left;
+	padding: 12px 8px;
+}
+
+h2
+{
+	font-weight:bold;
+	font-size:18px;
+	text-align:left;
+	padding: 12px 8px;
+}
+
+table
+{
+	border:2px solid black;
+}
+
+th
+{
+	border-bottom:1px solid #999999;
+	background-color: #b0b0b0;
+	padding: 5px;
+	text-align:center;
+	font-size:16px;
+}
+
+td
+{
+	border:1px solid #dddddd;
+	padding: 5px;
+	text-align:center;
+	background-color: #f8f8f8;
+}
+
+footer
+{
+	width: 100%;
+	bottom: 0;
+	position: fixed;
+}
+header
+{
+	font-weight:bold;
+	font-size:34px;
+	text-align:center;
+	padding: 45px 0px 0px 0px;
+}
+
+/* Classes */
+
+div.body
+{
+	padding:0px 25px 60px 25px;
+}
+div.messages
+{
+	text-align:center;
+	font-size:16px;
+	top:0;
+	left:0;
+	z-index:2;
+	width:100%;
+	position: absolute;
+}
+div.errorM
+{
+	border-bottom:1px solid #9C3838;
+	background-color: #FFB0B1;
+	padding:2px;
+}
+div.resultM
+{
+	border-bottom:1px solid #449C38;
+	background-color: #B0FFBA;
+	padding:2px;
+}
+div.footLinks
+{
+	border-top:1px solid #dddddd;
+	background-color: #b0b0b0;
+	padding: 5px;
+	text-align:center;
+	font-size:16px;
+}
+div.displayGroups
+{
+	border-bottom:1px solid #eeeeee;
+	background-color: #d0d0d0;
+	padding: 5px;
+	text-align:center;
+	font-size:14px;
+}
+
+table.forms
+{
+	text-align:left;
+}
+
+td.sideTH
+{
+	border-bottom:1px solid #999999;
+	background-color: #b0b0b0;
+	padding: 5px;
+	text-align:center;
+	font-size:16px;
+}
+
+td.formOp
+{
+	text-align:left;
+	background-color: #f8f8f8;
+}
+
+td.standardA
+{
+	background-color: #f8f8f8;
+}
+
+td.blankedA
+{
+	background-color: #f8f8f8;
+}
+td.standardB
+{
+	background-color: #e8e8e8;
+}
+
+td.blankedB
+{
+	background-color: #e8e8e8;
+}
