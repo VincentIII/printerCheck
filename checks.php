@@ -5,7 +5,6 @@
 	//	created by: 	Vincent Agresti
 	//	program name:	Consultant Check Program
 	//	short summary:	This program allows for administrators to monitor and document the printer checks and towers desk logins with ease.
-	//
 	// GLOBALS-----------------------------------------------------------------------------
 	$connection = new mysqli("localhost","root","","mydb");
 	if ($connection->connect_error)
@@ -151,7 +150,7 @@
 		$messages .= "ERROR:[$errno] $errorTrimmed::";
 	}
 	
-	//Displays Success & Error Messages\
+	//Displays Success & Error Messages
 	function displayMessages()
 	{
 		global $messages;
@@ -304,23 +303,21 @@
 		$dropDownExport = "<select name='$name'>\n";
 		if ($query != NULL)
 		{
-			$dropDownExport .= "<option value='IGNORE'>All</option>\n";
-			$results=$connection->query($query);
-			if($results === FALSE)
+			if ($stmtDD = $connection->prepare($query))
 			{
-				trigger_error('Wrong SQL: '.$query.' Error: '.$connection->error,E_USER_ERROR);
-			}
-			else
-			{
-				while($row=$results->fetch_assoc())
+				$dropDownExport .= "<option value='IGNORE'>All</option>\n";
+				$stmtDD->execute();
+				$stmtDD->store_result();
+				$stmtDD->bind_result($code,$name);
+				while ($stmtDD->fetch())
 				{
-					if (!empty($_POST[$name]) && $row['code'] == $_POST[$name])
+					if (!empty($_POST[$name]) && $code == $_POST[$name])
 					{
-						$dropDownExport .= "<option value='".$row['code']."' selected>".$row['name']."</option>\n";
+						$dropDownExport .= "<option value='$code' selected>$name</option>\n";
 					}
 					else
 					{
-						$dropDownExport .= "<option value='".$row['code']."'>".$row['name']."</option>\n";
+						$dropDownExport .= "<option value='$code'>$name</option>\n";
 					}
 				}
 			}
@@ -362,13 +359,13 @@
 				if ($fAction == "Clear Values")
 				{
 					$total++;
-					$query = "UPDATE checks SET completedTime=NULL,note=NULL WHERE cId='$properKey' ";
-					if($connection->query($query) === FALSE)
+					$query = "UPDATE checks SET completedTime=NULL,note=NULL WHERE cId=? ";
+					$bindString = "i";
+					if ($stmt=$connection->prepare($query))
 					{
-						trigger_error('Wrong SQL: ' . $sql . ' Error: ' . $connection->error, E_USER_ERROR);
-					}
-					else
-					{
+						$stmt->bind_param($properKey);
+						$stmt->execute();
+						$stmt->store_result();
 						$success++;
 					}
 				}
@@ -376,12 +373,12 @@
 				{
 					$total++;
 					$query = "DELETE FROM checks WHERE cId='$properKey' ";
-					if($connection->query($query) === FALSE)
+					$bindString = "i";
+					if ($stmt=$connection->prepare($query))
 					{
-						trigger_error('Wrong SQL: ' . $sql . ' Error: ' . $connection->error, E_USER_ERROR);
-					}
-					else
-					{
+						$stmt->bind_param($properKey);
+						$stmt->execute();
+						$stmt->store_result();
 						$success++;
 					}
 				}
@@ -392,8 +389,8 @@
 					{
 						$tValue = $_POST['time'.$properKey];
 						$dValue = $_POST['date'.$properKey];
-						$fullDate = $dValue." ".$tValue;
-						$query .= " completedTime='$fullDate'";
+						$value = $dValue." ".$tValue;
+						$query .= " completedTime=?";
 					}
 					else if (empty($_POST['note'.$properKey]))
 					{
@@ -401,8 +398,8 @@
 					}
 					else if ($_POST['note'.$properKey] != "IGNORE")
 					{
-						$nValue = $_POST['note'.$properKey];
-						$query .= " note='$nValue'";
+						$value = $_POST['note'.$properKey];
+						$query .= " note=?";
 					}
 					else
 					{
@@ -413,12 +410,12 @@
 					{
 						$total++;
 						$query .= " WHERE cId='$properKey' ";
-						if($connection->query($query) === FALSE)
+						$bindString = "si";
+						if ($stmt=$connection->prepare($query))
 						{
-							trigger_error('Wrong SQL: ' . $sql . ' Error: ' . $connection->error, E_USER_ERROR);
-						}
-						else
-						{
+							$stmt->bind_param($value, $properKey);
+							$stmt->execute();
+							$stmt->store_result();
 							$success++;
 						}
 					}
@@ -441,6 +438,7 @@
 	}
 		
 	//Displays all checks within a specified query
+	//Prepared Statements Needed
 	function checksDisplay($dateStart,$dateEnd,$employee,$location,$note,$active)	
 	{
 		global $connection;
@@ -904,19 +902,15 @@
 			$query = "SELECT locationCode, locationName FROM locations WHERE active = 1 ORDER BY locationCode ASC ";
 		}
 		$jumpDown=1;
-		$results=$connection->query($query);
-		if($results === FALSE)
+		if ($stmt = $connection->prepare($query))
 		{
-			trigger_error('Wrong SQL: '.$query.' Error: '.$connection->error,E_USER_ERROR);
-		}
-		else
-		{
-			while($row=$results->fetch_assoc())
-			{	
-				if ($row['locationName'] != "Towers Help Desk")
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($code,$name);
+			while ($stmt->fetch())
+			{
+				if ($name != "Towers Help Desk")
 				{
-					$code = $row['locationCode'];
-					$name = $row['locationName'];
 					if (!empty($_POST[$code]))
 					{
 						echo "<td class='formOp'><input type='checkbox' name='$code' value='yes' id='$code' checked/><label for='$code'>$name</label></td>";
@@ -1008,6 +1002,7 @@
 	}
 
 	//Adds Custom Shift
+	//Prepared Statements Needed
 	function addCustomShift()
 	{
 		global $displayMode;
@@ -1092,6 +1087,7 @@
 	}
 	
 	//Add Shift
+	//Prepared Statements Needed
 	function addShift($employee,$shift,$date,$startTime,$endTime)
 	{
 		global $connection;
