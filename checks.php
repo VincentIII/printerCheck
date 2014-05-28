@@ -363,7 +363,7 @@
 					$bindString = "i";
 					if ($stmt=$connection->prepare($query))
 					{
-						$stmt->bind_param($properKey);
+						$stmt->bind_param($bindString, $properKey);
 						$stmt->execute();
 						$stmt->store_result();
 						$success++;
@@ -376,7 +376,7 @@
 					$bindString = "i";
 					if ($stmt=$connection->prepare($query))
 					{
-						$stmt->bind_param($properKey);
+						$stmt->bind_param($bindString, $properKey);
 						$stmt->execute();
 						$stmt->store_result();
 						$success++;
@@ -409,11 +409,11 @@
 					if ($updateTrigger == TRUE)
 					{
 						$total++;
-						$query .= " WHERE cId='$properKey' ";
+						$query .= " WHERE cId=? ";
 						$bindString = "si";
 						if ($stmt=$connection->prepare($query))
 						{
-							$stmt->bind_param($value, $properKey);
+							$stmt->bind_param($bindString, $value, $properKey);
 							$stmt->execute();
 							$stmt->store_result();
 							$success++;
@@ -438,122 +438,98 @@
 	}
 		
 	//Displays all checks within a specified query
-	//Prepared Statements Needed
 	function checksDisplay($dateStart,$dateEnd,$employee,$location,$note,$active)	
 	{
 		global $connection;
 		global $displayType;
 		global $displayMode;
 		global $messages;
-		$query = "SELECT checks.cId, checks.locationCode, locations.locationName, checks.username, employees.firstName, employees.lastName, checks.startTime, checks.endTime, checks.completedTime, checks.note, locations.locationType, employees.type FROM checks INNER JOIN locations ON checks.locationCode = locations.locationCode INNER JOIN employees ON checks.username = employees.username";
+		$query = "SELECT checks.cId, checks.locationCode, locations.locationName, checks.username, employees.firstName, employees.lastName, checks.startTime, checks.endTime, checks.completedTime, checks.note, locations.locationType, employees.type FROM checks INNER JOIN locations ON checks.locationCode = locations.locationCode INNER JOIN employees ON checks.username = employees.username WHERE";
 		$completeNeeded = FALSE;
+		$bindString = "";
+		$andTrigger = FALSE;
 		
 		//Establish Query Perimeters and Search Restraints
-		$whereTrigger = TRUE;
-		$andTrigger = FALSE;
+		
+			//Date
 		if ($dateEnd == "IGNORE" && $dateStart != "IGNORE")
 		{
-			if ($whereTrigger == TRUE)
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
 			$dateStart = $dateStart." 00:00:00";
-			$query .= " checks.startTime >= '$dateStart'";
+			$usedVariables[] = $dateStart;
+			$query .= " checks.startTime>=?";
 			$andTrigger = TRUE;
+			$bindString .= "s";
 		}
 		else if ($dateEnd != "IGNORE" && $dateStart != "IGNORE")
 		{
-			if ($whereTrigger == TRUE)
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
 			$dateStart = $dateStart." 00:00:00";
 			$dateEnd = $dateEnd." 23.59.59";
-			$query .= " checks.startTime >= '$dateStart' AND checks.endTime <= '$dateEnd'";
+			$usedVariables[] = $dateStart;
+			$usedVariables[] = $dateEnd;
+			$query .= " checks.startTime>=? AND checks.endTime<=?";
 			$andTrigger = TRUE;
+			$bindString .= "ss";
 		}
 		else if ($dateEnd != "IGNORE" && $dateStart == "IGNORE")
 		{
-			if ($whereTrigger == TRUE)
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
 			$dateEnd = $dateEnd." 23.59.59";
-			$query .= " checks.endTime <= '$dateEnd'";
+			$usedVariables[] = $dateEnd;
+			$query .= " checks.endTime<=?";
+			$andTrigger = TRUE;
+			$bindString .= "s";
+		}
+		else{}
+		
+			//Username
+		if ($employee != "IGNORE")
+		{
+			if ($andTrigger == TRUE)
+			{
+				$query .= " AND";
+			}
+			$usedVariables[] = $employee;
+			$query .=" checks.username=?";
+			$andTrigger = TRUE;
+			$bindString .= "s";
+		}
+		
+			//ConType
+		if ($displayMode == "LabCons")
+		{
+			if ($andTrigger == TRUE)
+			{
+				$query .= " AND";
+			}
+			$query .=" employees.type = '1'";
+			$andTrigger = TRUE;
+		}
+		else if ($displayMode == "TechCons")
+		{
+			if ($andTrigger == TRUE)
+			{
+				$query .= " AND";
+			}
+			$query .=" employees.type = '2'";
 			$andTrigger = TRUE;
 		}
 		else{}
 		
-		if ($employee != "IGNORE")
-		{
-			if ($whereTrigger == TRUE)
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
-			if ($andTrigger == TRUE)
-			{
-				$query .= " AND";
-			}
-			$query .=" checks.username = '$employee'";
-			$andTrigger = TRUE;
-		}
-		else
-		{
-			$sessionFilterTrigger = FALSE;
-			if ($displayMode == "LabCons")
-			{
-				$employeeType = 1;
-				$sessionFilterTrigger = TRUE;
-			}
-			else if ($displayMode == "TechCons")
-			{
-				$employeeType = 2;
-				$sessionFilterTrigger = TRUE;
-			}
-			else{}
-			
-			if ($sessionFilterTrigger == TRUE)
-			{
-				if ($whereTrigger == TRUE)
-				{
-					$query .= " WHERE";
-					$whereTrigger = FALSE;
-				}
-				if ($andTrigger == TRUE)
-				{
-					$query .= " AND";
-				}
-				$query .=" employees.type = '$employeeType'";
-				$andTrigger = TRUE;
-			}
-		}
-		
+			//Location
 		if ($location != "IGNORE")
 		{
-			if ($whereTrigger == TRUE)
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
 			if ($andTrigger == TRUE)
 			{
 				$query .= " AND";
 			}
-			$query .= " checks.locationCode = '$location'";
+			$usedVariables[] = $location;
+			$query .=" checks.locationCode=?";
 			$andTrigger = TRUE;
+			$bindString .= "s";
 		}
 		
+			//Note
 		if (!empty($note))
 		{
-			if ($whereTrigger == TRUE && $note != "All")
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
 			if ($andTrigger == TRUE && $note != "All")
 			{
 				$query .= " AND";
@@ -577,17 +553,14 @@
 			}
 			else
 			{
-				$query .= " checks.note = '$note'";
+				$usedVariables[] = $note;
+				$query .= " checks.note = ?";
 				$andTrigger = TRUE;
+				$bindString .= "s";
 			}
 		}
 		else
 		{
-			if ($whereTrigger == TRUE)
-			{
-				$query .= " WHERE";
-				$whereTrigger = FALSE;
-			}
 			if ($andTrigger == TRUE)
 			{
 				$query .= " AND";
@@ -595,16 +568,13 @@
 			$query .= " checks.note IS NULL AND checks.completedTime IS NULL";
 			$andTrigger = TRUE;
 		}
-		
-		if ($whereTrigger == TRUE)
-		{
-			$query .= " WHERE";
-		}
 		if ($andTrigger == TRUE)
 		{
 			$query .= " AND";
 		}
-		$query .= " employees.active = '$active' ORDER BY checks.username ASC, checks.startTime DESC";
+		$usedVariables[] = $active;
+		$query .= " employees.active = ? ORDER BY checks.username ASC, checks.startTime DESC";
+		$bindString .="i";
 		//Create the results tables, separated by category
 		$resultsTCounts = 0;
 		$resultsPCounts = 0;
@@ -620,26 +590,51 @@
 		$alternateP = FALSE;
 		$alternateT = FALSE;
 		$towersSwitcher = 0;
-		$results=$connection->query($query);
-		if($results === FALSE)
+		echo $query;
+		if ($stmt = $connection->prepare($query))
 		{
-			trigger_error('Wrong SQL: '.$query.' Error: '.$connection->error,E_USER_ERROR);
-		}
-		else
-		{
-			while($row=$results->fetch_assoc())
+			//Based on how many variables are used in search, bind the parameters correctly
+			if (count($usedVariables) == 6)
 			{
-				$checkDate = substr($row['startTime'],0,10);
-				$startTime = substr($row['startTime'],11,5);
-				$endTime = substr($row['endTime'],11,5);
+				$stmt->bind_param($bindString,$usedVariables[0],$usedVariables[1],$usedVariables[2],$usedVariables[3],$usedVariables[4],$usedVariables[5]);
+			}
+			else if (count($usedVariables) == 5)
+			{
+				$stmt->bind_param($bindString,$usedVariables[0],$usedVariables[1],$usedVariables[2],$usedVariables[3],$usedVariables[4]);
+			}
+			else if (count($usedVariables) == 4)
+			{
+				$stmt->bind_param($bindString,$usedVariables[0],$usedVariables[1],$usedVariables[2],$usedVariables[3]);
+			}
+			else if (count($usedVariables) == 3)
+			{
+				$stmt->bind_param($bindString,$usedVariables[0],$usedVariables[1],$usedVariables[2]);
+			}
+			else if (count($usedVariables) == 2)
+			{
+				$stmt->bind_param($bindString,$usedVariables[0],$usedVariables[1]);
+			}
+			else if (count($usedVariables) == 1)
+			{
+				$stmt->bind_param($bindString,$usedVariables[0]);
+			}
+			else{}
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($cId, $locationCode, $locationName, $username, $firstName, $lastName, $startTime, $endTime, $completedTime, $note, $locationType, $type);
+			while ($stmt->fetch())
+			{
+				$checkDate = substr($startTime,0,10);
+				$startTime = substr($startTime,11,5);
+				$endTime = substr($endTime,11,5);
 				
 				//CSS Switcher
-				if ($row['locationType'] != 3)
+				if ($locationType != 3)
 				{
-					if ($oldName != $row['username'] || $oldSTime != $row['startTime'] )
+					if ($oldName != $username || $oldSTime != $startTime )
 					{
-						$oldName = $row['username'];
-						$oldSTime = $row['startTime'] ;
+						$oldName = $username;
+						$oldSTime = $startTime ;
 						if ($standardPClass == "standardA")
 						{
 							$standardPClass = "standardB";
@@ -656,9 +651,9 @@
 				}
 				else
 				{
-					if ($towersSwitcher == 2 || $oldName != $row['username'])
+					if ($towersSwitcher == 2 || $oldName != $username)
 					{
-						$oldName = $row['username'];
+						$oldName = $username;
 						if ($standardTClass == "standardA")
 						{
 							$standardTClass = "standardB";
@@ -676,48 +671,48 @@
 					$blankedClass = $blankedTClass;
 				}
 				
-				$rowID = "row".$row['cId'];
-				$dateID = "date".$row['cId'];
-				$timeID = "time".$row['cId'];
+				$rowID = "row".$cId;
+				$dateID = "date".$cId;
+				$timeID = "time".$cId;
 				
-				$tableRow = "<tr><td class='$standardClass'><input type='hidden' name='$rowID' value='".$row['cId']."'><a title='".$row['locationCode']."'>".$row['locationName']."</a></td><td class='$standardClass'>".$row['firstName']." ".$row['lastName']."<br/><em>".$row['username']."</em></td><td class='$standardClass'>$checkDate<br/>($startTime)-($endTime)</td>";
+				$tableRow = "<tr><td class='$standardClass'><input type='hidden' name='$rowID' value='$cId'><a title='$locationCode'>$locationName</a></td><td class='$standardClass'>$firstName $lastName<br/><em>$username</em></td><td class='$standardClass'>$checkDate<br/>($startTime)-($endTime)</td>";
 				
-				if ($row['completedTime'] == NULL && $row['note'] == NULL)	//Set Completed Time
+				if ($completedTime == NULL && $note == NULL)	//Set Completed Time
 				{
 					$tableRow .= "<td class='$standardClass'><input type='time' name='$timeID'><input type='hidden' name='$dateID' value='$checkDate'></td>";
 				}
-				else if ($row['completedTime'] == NULL && $row['note'] != NULL)
+				else if ($completedTime == NULL && $note != NULL)
 				{
 					$tableRow .= "<td class='$blankedClass'></td>";
 				}
 				else
 				{
-					$completedTime = substr($row['completedTime'],11,5);
+					$completedTime = substr($completedTime,11,5);
 					$tableRow .= "<td class='$standardClass'>$completedTime</td>";
 				}
 				
-				if ($row['note'] == NULL && $row['completedTime'] == NULL)	//Set Notes
+				if ($note == NULL && $completedTime == NULL)	//Set Notes
 				{
 					$tableRow .= "<td class='$standardClass'>";
-					$tableRow .= generateDropDowns("noteU",$row['cId']);
+					$tableRow .= generateDropDowns("noteU",$cId);
 					$tableRow .= "</td>";
 				}
-				else if ($row['note'] == NULL && $row['completedTime'] != NULL)
+				else if ($note == NULL && $completedTime != NULL)
 				{
 					$tableRow .= "<td class='$blankedClass'></td>";
 				}
-				else if ($row['note'] == "Missed")
+				else if ($note == "Missed")
 				{
 					$tableRow .= "<td class='$standardClass'><em>Missed</em><br/>";
-					$tableRow .= generateDropDowns("noteU",$row['cId']);
+					$tableRow .= generateDropDowns("noteU",$cId);
 					$tableRow .= "</td>";
 				}
 				else
 				{
-					$tableRow .= "<td class='$standardClass'><p>".$row['note']."</p></td>";
+					$tableRow .= "<td class='$standardClass'><p>$note</p></td>";
 				}
 				
-				if ($row['locationType'] == 3)	//Sort into correct output table
+				if ($locationType == 3)	//Sort into correct output table
 				{
 					$towersDTable .= $tableRow;
 					$resultsTCounts++;
@@ -746,6 +741,11 @@
 			{
 				$messages .= "RESULT:No checks found::";
 			}
+		}
+		else
+		{
+			$error = $connection->error;
+			$messages .= "ERROR: $error::";
 		}
 		echo"<input type='submit' name='action' value='Clear Values'/><input type='submit' name='action' value='Delete'/><input type='submit' name='action' value='Update'/>\n";
 		echo "</form><br/>\n";
@@ -1002,7 +1002,6 @@
 	}
 
 	//Adds Custom Shift
-	//Prepared Statements Needed
 	function addCustomShift()
 	{
 		global $displayMode;
@@ -1057,18 +1056,14 @@
 		{
 			$total = 0;
 			$success = 0;
+			$stmt = $connection->prepare("INSERT INTO checks (locationCode, username, startTime, endTime) VALUES (?,?,?,?)");
+			$stmt->bind_param('ssss',$location,$employee,$startDT,$endDT);
 			for ($i=0; $i < count($locations); $i++)
 			{
 				$total++;
-				$query = "INSERT INTO checks (locationCode, username, startTime, endTime) VALUES ('$locations[$i]','$employee','$startDT','$endDT'); ";
-				if($connection->query($query) === false)
-				{
-					trigger_error('Wrong SQL: ' . $sql . ' Error: ' . $connection->error, E_USER_ERROR);
-				}
-				else
-				{
-					$success++;
-				}
+				$location = $locations[$i];
+				$stmt->execute();
+				$success++;
 			}
 			if ($total != 0 && $total == $success)
 			{
