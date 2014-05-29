@@ -360,10 +360,9 @@
 				{
 					$total++;
 					$query = "UPDATE checks SET completedTime=NULL,note=NULL WHERE cId=? ";
-					$bindString = "i";
 					if ($stmt=$connection->prepare($query))
 					{
-						$stmt->bind_param($bindString, $properKey);
+						$stmt->bind_param("i",$properKey);
 						$stmt->execute();
 						$stmt->store_result();
 						$success++;
@@ -373,10 +372,9 @@
 				{
 					$total++;
 					$query = "DELETE FROM checks WHERE cId='$properKey' ";
-					$bindString = "i";
 					if ($stmt=$connection->prepare($query))
 					{
-						$stmt->bind_param($bindString, $properKey);
+						$stmt->bind_param("i",$properKey);
 						$stmt->execute();
 						$stmt->store_result();
 						$success++;
@@ -410,10 +408,9 @@
 					{
 						$total++;
 						$query .= " WHERE cId=? ";
-						$bindString = "si";
 						if ($stmt=$connection->prepare($query))
 						{
-							$stmt->bind_param($bindString, $value, $properKey);
+							$stmt->bind_param("si", $value, $properKey);
 							$stmt->execute();
 							$stmt->store_result();
 							$success++;
@@ -590,7 +587,6 @@
 		$alternateP = FALSE;
 		$alternateT = FALSE;
 		$towersSwitcher = 0;
-		echo $query;
 		if ($stmt = $connection->prepare($query))
 		{
 			//Based on how many variables are used in search, bind the parameters correctly
@@ -1082,7 +1078,6 @@
 	}
 	
 	//Add Shift
-	//Prepared Statements Needed
 	function addShift($employee,$shift,$date,$startTime,$endTime)
 	{
 		global $connection;
@@ -1268,25 +1263,24 @@
 		{
 			$total = 0;
 			$success = 0;
+			$stmt = $connection->prepare("INSERT INTO checks (locationCode, username, startTime, endTime) VALUES (?,?,?,?)");
+			$stmt->bind_param('ssss',$location,$employee,$startDT,$endDT);
 			for ($i=0; $i < count($insertsNeeded); $i++)
 			{
 				$total++;
+				$location = $insertsNeeded[$i];
 				if ($shift == 6)
 				{
-					$query = "INSERT INTO checks (locationCode, username, startTime, endTime) VALUES ('$insertsNeeded[$i]','$employee','$cStartShift[$i]','$cEndShift[$i]'); ";
+					$startDT = $cStartShift[$i];
+					$endDT = $cEndShift[$i];
 				}
 				else
 				{
-					$query = "INSERT INTO checks (locationCode, username, startTime, endTime) VALUES ('$insertsNeeded[$i]','$employee','$cStartShift','$cEndShift'); ";
+					$startDT = $cStartShift;
+					$endDT = $cEndShift;
 				}
-				if($connection->query($query) === false)
-				{
-					trigger_error('Wrong SQL: ' . $sql . ' Error: ' . $connection->error, E_USER_ERROR);
-				}
-				else
-				{
-					$success++;
-				}
+				$stmt->execute();
+				$success++;
 			}
 			if ($total != 0 && $total == $success)
 			{
