@@ -1207,11 +1207,21 @@
 		}
 		else if ($shift == 3)		//WPU, Towers & Bruce
 		{
-			$insertsNeeded[] = "wpu-ss1";
-			$insertsNeeded[] = "towers-ss1";
-			$insertsNeeded[] = "towers-ss2";
-			$insertsNeeded[] = "towers-ss3";
-			$insertsNeeded[] = "bruce-ss1";
+			if ($day == "Mon" || $day == "Tue" || $day == "Wed" || $day == "Thu" || $day == "Fri")
+			{
+				$insertsNeeded[] = "wpu-ss1";
+				$insertsNeeded[] = "towers-ss1";
+				$insertsNeeded[] = "towers-ss2";
+				$insertsNeeded[] = "towers-ss3";
+				$insertsNeeded[] = "bruce-ss1";
+			}
+			else
+			{
+				$insertsNeeded[] = "towers-ss1";
+				$insertsNeeded[] = "towers-ss2";
+				$insertsNeeded[] = "towers-ss3";
+				$insertsNeeded[] = "bruce-ss1";
+			}
 		}
 		else
 		{
