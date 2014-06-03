@@ -584,6 +584,7 @@
 		$blankedTClass = "blankedA";
 		$oldName = "";
 		$oldSTime = "";
+		$oldSDate = "";
 		$alternateP = FALSE;
 		$alternateT = FALSE;
 		$towersSwitcher = 0;
@@ -627,10 +628,11 @@
 				//CSS Switcher
 				if ($locationType != 3)
 				{
-					if ($oldName != $username || $oldSTime != $startTime )
+					if ($oldName != $username || $oldSTime != $startTime || $oldSDate != $checkDate)
 					{
 						$oldName = $username;
-						$oldSTime = $startTime ;
+						$oldSTime = $startTime;
+						$oldSDate = $checkDate;
 						if ($standardPClass == "standardA")
 						{
 							$standardPClass = "standardB";
