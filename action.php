@@ -1,347 +1,6 @@
 <?php
-	session_start();
-	set_error_handler("messageError");
-	// DEV NOTES---------------------------------------------------------------------------
-	//	created by: 	Vincent Agresti
-	//	program name:	Consultant Check Program
-	//	short summary:	This program allows for administrators to monitor and document the printer checks and towers desk logins with ease.
-	// GLOBALS-----------------------------------------------------------------------------
-	$connection = new mysqli("localhost","root","","mydb");
-	if ($connection->connect_error)
-	{
-		trigger_error('Database connection failed: '.$connection->connect_error,E_USER_ERROR);
-	}
-	if (date("I", time()) == TRUE)
-	{
-		$rightNow = date('Y-m-d H:i:s', time()-21600);	//21600 seconds - 6 hours (DST)
-	}
-	else
-	{
-		$rightNow = date('Y-m-d H:i:s', time()-18000);	//18000 seconds - 5 hours
-	}
-	$messages = "";
-	$shiftAddNum = 0;
-	$shiftAddSuccess = 0;
-	$towersActive = FALSE;
-	if (!empty($_SESSION["DMODE"]))
-	{
-		$displayMode = $_SESSION["DMODE"];
-	}
-	else
-	{
-		$displayMode = "AllCons";
-	}
-	
-		//Verify GETs
-	if (!empty($_GET["menu"]))
-	{
-		$displayType = $_GET["menu"];
-	}
-	else
-	{
-		$displayType = "";
-	}
-	if (!empty($_GET["display"]))
-	{
-		$displayVal = $_GET["display"];
-	}
-		//Verify POSTs
-	if (!empty($_POST["action"]))
-	{
-		$fAction = $_POST["action"];
-	}
-	else
-	{
-		$fAction = "N/A";
-	}
-	if ($fAction != "Add Shift")
-	{
-		if (empty($_POST["startDate"]))
-		{
-			$_POST["startDate"] = "IGNORE";
-		}
-		if (empty($_POST["endDate"]))
-		{
-			$_POST["endDate"] = "IGNORE";
-		}
-	}
-
-	// FUNCTIONS---------------------------------------------------------------------------
-	//Display HTML Header
-	function displayHead()
-	{
-		global $displayType;
-		if ($displayType == "checks")
-		{
-			$title = "Browse Checks";
-		}
-		else if ($displayType == "add")
-		{
-			$title = "Add New Checks";
-		}
-		else if ($displayType == "stats")
-		{
-			$title = "Printer Check Stats";
-		}
-		else
-		{
-			$title = "Priority Checks";
-		}
-		echo "<!DOCTYPE html>
-				<head>
-					<meta http-equiv='Content-type' content='text/html;charset=UTF-8' />
-					<title>Consultant Checks</title>
-					<link rel='stylesheet' type='text/css' href='reset.css'/>
-					<link rel='stylesheet' type='text/css' href='css.css'/>
-					<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>";
-	?>
-		<script>
-			$(document).ready(function(){
-				$(".errorM").click(function(event){
-					$(this).hide();
-				});
-				$(".resultM").click(function(event){
-					$(this).hide();
-				});
-			});
-			function clearThis(target){target.value= "";}
-		</script>
-	<?php
-				echo"</head>
-				<body>
-				<header>$title</header>
-					<div class='body'>\n";
-	}
-	
-	//Displays HTML Footer
-	function displayFooter()				
-	{
-		global $displayType;
-		global $displayMode;
-		echo "</div>
-		<footer>
-				<div class='footLinks'>
-					<a href='checks.php'>[priority]</a> <a href='checks.php?menu=checks'>[checks]</a> <a href='checks.php?menu=add'>[add shifts]</a>
-					</div>
-					<div class='displayGroups'>";
-		if ($displayMode == "LabCons")
-		{
-			echo "<a href=checks.php?display=AllCons&menu=$displayType>[All *Cons]</a> <em>[LabCons Only]</em> <a href=checks.php?display=TechCons&menu=$displayType>[TechCons Only]</a>\n";
-		}
-		else if ($displayMode == "TechCons")
-		{
-			echo "<a href=checks.php?display=AllCons&menu=$displayType>[All *Cons]</a> <a href=checks.php?display=LabCons&menu=$displayType>[LabCons Only]</a> <em>[TechCons Only]</em>\n";
-		}
-		else
-		{
-			echo "<em>[All *Cons]</em> <a href=checks.php?display=LabCons&menu=$displayType>[LabCons Only]</a> <a href=checks.php?display=TechCons&menu=$displayType>[TechCons Only]</a>\n";
-		}
-		echo "</div>
-		</footer>
-			</body>
-			</html>";
-	}
-	
-	//Custom Error Handler
-	function messageError($errno,$errstr)
-	{
-		global $messages;
-		$errorTrimmed = str_replace(':','-',$errstr);
-		$messages .= "ERROR:[$errno] $errorTrimmed::";
-	}
-	
-	//Displays Success & Error Messages
-	function displayMessages()
-	{
-		global $messages;
-		echo "<div class='messages'>";
-		$continue = TRUE;
-		while ($continue == TRUE)
-		{
-			$end = strpos($messages, "::");
-			if ($end === FALSE)
-			{
-				$continue = FALSE;
-			}
-			else
-			{
-				$thisMessage = strstr($messages,"::",TRUE);
-				$messages = strstr($messages,"::",FALSE);
-				$messages = substr($messages,2);
-				$type = strstr($thisMessage,":",TRUE);
-				$message = strstr($thisMessage,":",FALSE);
-				$message = substr($message,1);
-				if ($type == "ERROR")
-				{
-					echo "<div class='errorM'>$message</div>";
-				}
-				else if ($type == "RESULT")
-				{
-					echo "<div class='resultM'>$message</div>";
-				}
-				else{}
-			}
-		}
-		echo "</div>";
-	}
-	
-	//Toggles Between All, LabCons and TechCons
-	function displayModeToggle()
-	{
-		global $displayMode;
-		global $displayVal;
-		if (!empty($displayVal))
-		{
-			if ($displayVal == "LabCons")
-			{
-				$_SESSION["DMODE"] = "LabCons";
-			}
-			else if ($displayVal == "TechCons")
-			{
-				$_SESSION["DMODE"] = "TechCons";
-			}
-			else
-			{
-				$_SESSION["DMODE"] = "AllCons";
-			}
-			$displayMode = $_SESSION["DMODE"];
-		}
-	}
-	
-	//Creates Check Search Form
-	function checksSearch()					
-	{
-		global $displayType;
-		echo "<h1>Search</h1>\n
-				<form action='checks.php?menu=$displayType' id='searchForm' method='post'>
-				<table class='forms'>
-				<tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",NULL);
-		echo "</td></tr>\n<tr><td class='sideTH'>Location</td><td class='formOp'>";
-		echo generateDropDowns("location",NULL);
-		echo "</td></tr>\n<tr><td class='sideTH'>Timespan</td><td class='formOp'><input type='date' name='startDate'><input type='date' name='endDate'></td>";
-		echo "</td></tr>\n<tr><td class='sideTH'>Note</td><td class='formOp'>";
-		echo generateDropDowns("noteS",NULL);
-		echo "</td></tr>\n<tr><td class='sideTH'>Active Employee</td><td class='formOp'>Yes <input type='radio' name='active' value='1' checked> No <input type='radio' name='active' value='0'></td></tr>\n<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Search'/></td></tr>
-		</table></form>\n";
-	}
-	
-	//Makes the drop-down form selection boxes for the Search Form
-	function generateDropDowns($section,$id)	
-	{
-		global $displayMode;
-		global $connection;
-		if ($section == "location")
-		{
-			$name = "location";
-			if ($displayMode == "LabCons")
-			{
-				$query = "SELECT locationCode AS code, locationName AS name FROM locations WHERE locationType = 1 AND active = 1 ORDER BY locationCode ASC ";
-			}
-			else if ($displayMode == "TechCons")
-			{
-				$query = "SELECT locationCode AS code, locationName AS name FROM locations WHERE locationType != 1  AND active = 1  ORDER BY locationCode ASC ";
-			}
-			else
-			{
-				$query = "SELECT locationCode AS code, locationName AS name FROM locations WHERE active = 1 ORDER BY locationCode ASC ";
-			}
-		}
-		else if ($section == "employees")
-		{
-			$name = "employees".$id;
-			if ($displayMode == "LabCons")
-			{
-				$query = "SELECT username AS code, CONCAT_WS(', ', lastName, firstName) AS name FROM employees WHERE type = 1 AND active = 1 ORDER BY lastName ASC ";
-			}
-			else if ($displayMode == "TechCons")
-			{
-				$query = "SELECT username AS code, CONCAT_WS(', ', lastName, firstName) AS name FROM employees WHERE type = 2 AND active = 1 ORDER BY lastName ASC ";
-			}
-			else
-			{
-				$query = "SELECT username AS code, CONCAT_WS(', ', lastName, firstName) AS name FROM employees WHERE active = 1 ORDER BY lastName ASC ";
-			}
-		}
-		else if ($section == "shifts")
-		{
-			$name = "shifts";
-			$query = NULL;
-			if ($displayMode == "LabCons")
-			{
-				$sectArray = array(0=>"Alumni",1=>"Benedum",2=>"Hillman");
-			}
-			else if ($displayMode == "TechCons")
-			{
-				$sectArray = array(3=>"WPU, Towers & Bruce");
-			}
-			else
-			{
-				$sectArray = array(0=>"Alumni",1=>"Benedum",2=>"Hillman",3=>"WPU, Towers & Bruce");
-			}
-		}
-		else if ($section == "status")
-		{
-			$name = "status";
-			$query = NULL;
-			$sectArray = array(0=>"All",1=>"Not Completed",2=>"Completed",3=>"Missed");
-		}
-		else if ($section == "noteS")
-		{
-			$name = "note";
-			$query = NULL;
-			$sectArray = array("All"=>"All","None"=>"None","Completed"=>"Completed","Missed"=>"Missed","Email Sent"=>"Email Sent","Called Off"=>"Called Off","Supervisor Excused"=>"Supervisor Excused","Single Coverage"=>"Single Coverage","Location Error"=>"Location Error","Program Error"=>"Program Error","Printer Error"=>"Printer Error","Other Notes"=>"Other Notes","Deletion"=>"Deletion");
-		}
-		else if ($section == "noteU")
-		{
-			$name = "note".$id;
-			$query = NULL;
-			$sectArray = array("IGNORE"=>"","Missed"=>"Missed","Email Sent"=>"Email Sent","Called Off"=>"Called Off","Supervisor Excused"=>"Supervisor Excused","Single Coverage"=>"Single Coverage","Location Error"=>"Location Error","Program Error"=>"Program Error","Printer Error"=>"Printer Error","Other..."=>"Other...","Deletion"=>"Deletion");
-		}
-		else{}
-		
-		$dropDownExport = "<select name='$name'>\n";
-		if ($query != NULL)
-		{
-			if ($stmtDD = $connection->prepare($query))
-			{
-				$dropDownExport .= "<option value='IGNORE'>All</option>\n";
-				$stmtDD->execute();
-				$stmtDD->store_result();
-				$stmtDD->bind_result($code,$name);
-				while ($stmtDD->fetch())
-				{
-					if (!empty($_POST[$name]) && $code == $_POST[$name])
-					{
-						$dropDownExport .= "<option value='$code' selected>$name</option>\n";
-					}
-					else
-					{
-						$dropDownExport .= "<option value='$code'>$name</option>\n";
-					}
-				}
-			}
-		}
-		else
-		{
-			foreach ($sectArray as $key => $value)
-			{
-				if (!empty($_POST[$name]) && $key == $_POST[$name])
-				{
-					$dropDownExport .= "<option value='$key' selected>$value</option>\n";
-				}
-				else
-				{
-					$dropDownExport .= "<option value='$key'>$value</option>\n";
-				}
-			}
-		}
-		$dropDownExport .= "</select><br/>\n";
-		return $dropDownExport;
-	}	
-		
 	//Updates the checks for basic-user changes (setting completion time & no-shows)
-	function updateResults()
+	function updateChecksFunc()
 	{
 		global $connection;
 		global $displayType;
@@ -435,12 +94,13 @@
 	}
 		
 	//Displays all checks within a specified query
-	function checksDisplay($dateStart,$dateEnd,$employee,$location,$note,$active)	
+	function checkSearchFunc($dateStart,$dateEnd,$employee,$location,$note,$active)	
 	{
 		global $connection;
 		global $displayType;
 		global $displayMode;
 		global $messages;
+		global $pageName;
 		$query = "SELECT checks.cId, checks.locationCode, locations.locationName, checks.username, employees.firstName, employees.lastName, checks.startTime, checks.endTime, checks.completedTime, checks.note, locations.locationType, employees.type FROM checks INNER JOIN locations ON checks.locationCode = locations.locationCode INNER JOIN employees ON checks.username = employees.username WHERE";
 		$completeNeeded = FALSE;
 		$bindString = "";
@@ -575,7 +235,7 @@
 		//Create the results tables, separated by category
 		$resultsTCounts = 0;
 		$resultsPCounts = 0;
-		echo "<h1>Results</h1>\n<form action='checks.php?menu=$displayType' id='updateCheck' method='post'>";
+		echo "<h1>Results</h1>\n<form action='$pageName?menu=$displayType' id='updateCheck' method='post'>";
 		$printerTable = "<h2>Printers</h2><table><tr><th>Location</th><th>Consultant</th><th>Shift Time</th><th>Complete Time</th><th>Notes</th></tr>\n";
 		$towersDTable = "<h2>Towers Desk</h2><table><tr><th>Location</th><th>Consultant</th><th>Shift Time</th><th>Complete Time</th><th>Notes</th></tr>\n";
 		$standardPClass = "standardA";
@@ -749,195 +409,8 @@
 		echo "</form><br/>\n";
 	}
 	
-	//Creates Multiple Printer Shift Adding Form
-	function addMPShiftForm()
-	{
-		global $displayMode;
-		echo "<h1>Add Print Shifts</h1>\n
-				<form action='checks.php?menu=add' id='addMPShiftForm' method='post'>
-				<table class='forms'>
-				<tr><td class='sideTH'>Shift</td><td class='formOp'>";
-		echo generateDropDowns("shifts",NULL);
-		echo "</td><td class='sideTH'>Date</td><td class='formOp'>";
-		if (!empty($_POST['appDate']))
-		{
-			$oldFormVar = $_POST["appDate"];
-			echo "<input type='date' name='appDate' value='$oldFormVar'>";
-		}
-		else
-		{
-			echo "<input type='date' name='appDate'>";
-		}
-		echo"<tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",1);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime1']) && $_POST['startTime1'] != "IGNORE")
-		{
-			$oldFormVar1 = $_POST["startTime1"];
-			echo "<input type='time' name='startTime1' value='$oldFormVar1'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime1'>\n";
-		}		
-		echo"</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",2);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime2']) && $_POST['startTime2'] != "IGNORE")
-		{
-			$oldFormVar2 = $_POST["startTime2"];
-			echo "<input type='time' name='startTime2' value='$oldFormVar2'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime2'>\n";
-		}		
-		echo"</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";		
-		echo generateDropDowns("employees",3);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime3']) && $_POST['startTime3'] != "IGNORE")
-		{
-			$oldFormVar3 = $_POST["startTime3"];
-			echo "<input type='time' name='startTime3' value='$oldFormVar3'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime3'>\n";
-		}		
-		echo"</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",4);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime4']) && $_POST['startTime4'] != "IGNORE")
-		{
-			$oldFormVar4 = $_POST["startTime4"];
-			echo "<input type='time' name='startTime4' value='$oldFormVar4'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime4'>\n";
-		}	
-		echo "</td></tr><tr><td colspan='4' class='formOp'><input type='submit' name='action' value='Add Print Shifts'/></td></tr>
-		</table>
-		</form><br/><br/>";
-	}
-	
-	//Creates Multiple Towers Shift Adding Form
-	function addMTShiftForm()
-	{
-		global $displayMode;
-		echo "<h1>Add Towers Shifts</h1>\n
-				<form action='checks.php?menu=add' id='addMTShiftForm' method='post'>
-				<table class='forms'>
-				<tr><td class='sideTH' colspan='2'>Towers Only</td><td class='sideTH'>Date</td><td class='formOp'><input type='hidden' name='shifts' value='6'>";
-		if (!empty($_POST['appDate']))
-		{
-			$oldFormVar = $_POST["appDate"];
-			echo "<input type='date' name='appDate' value='$oldFormVar'>";
-		}
-		else
-		{
-			echo "<input type='date' name='appDate'>";
-		}
-		echo"<tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",1);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime1'><input type='time' name='endTime1'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",2);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime2'><input type='time' name='endTime2'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",3);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime3'><input type='time' name='endTime3'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",4);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime4'><input type='time' name='endTime4'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",5);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime5'><input type='time' name='endTime5'>\n</td></tr>";
-		
-		echo "</td></tr><tr><td colspan='4' class='formOp'><input type='submit' name='action' value='Add Towers Shifts'/></td></tr>
-		</table>
-		</form><br/><br/>";
-	}
-	
-	//Creates Custom Shift Form (Good for Vacations/Non-Standard Shifts)
-	function addCustomShiftForm()
-	{
-		global $displayMode;
-		global $db_info;
-		global $connection;
-		echo "<h1>Add Custom Shift</h1>\n
-				<form action='checks.php?menu=add' id='addCustomShiftForm' method='post'>
-				<table class='forms'>
-				<tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",NULL);
-		echo "</td><td class='sideTH'>Date/Time</td><td class='formOp'>";
-		if (!empty($_POST['appDate']))
-		{
-			$oldFormVar = $_POST["appDate"];
-			echo "<input type='date' name='appDate' value='$oldFormVar'>";
-		}
-		else
-		{
-			echo "<input type='date' name='appDate'>";
-		}
-		
-		if (!empty($_POST['startTime']) && $_POST['startTime'] != "IGNORE")
-		{
-			$oldFormVar = $_POST["startTime"];
-			echo "<input type='time' name='startTime' value='$oldFormVar'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime'>\n";
-		}		
-		echo "<br/>\n</td></tr><tr><td class='sideTH' colspan='4'>Locations</td></tr><tr>";
-		if ($displayMode == "LabCons")
-		{
-			$query = "SELECT locationCode, locationName FROM locations WHERE locationType = 1 AND active = 1 ORDER BY locationCode ASC ";
-		}
-		else if ($displayMode == "TechCons")
-		{
-			$query = "SELECT locationCode, locationName FROM locations WHERE locationType != 1 AND active = 1 ORDER BY locationCode ASC ";
-		}
-		else
-		{
-			$query = "SELECT locationCode, locationName FROM locations WHERE active = 1 ORDER BY locationCode ASC ";
-		}
-		$jumpDown=1;
-		if ($stmt = $connection->prepare($query))
-		{
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($code,$name);
-			while ($stmt->fetch())
-			{
-				if ($name != "Towers Help Desk")
-				{
-					if (!empty($_POST[$code]))
-					{
-						echo "<td class='formOp'><input type='checkbox' name='$code' value='yes' id='$code' checked/><label for='$code'>$name</label></td>";
-					}
-					else
-					{
-						echo "<td class='formOp'><input type='checkbox' name='$code' value='yes' id='$code'/><label for='$code'>$name</label></td>";
-					}
-					if ($jumpDown == 4)
-					{
-						echo "</tr><tr>";
-						$jumpDown = 0;
-					}
-					$jumpDown++;
-				}
-			}
-		}
-		while ($jumpDown != 5)
-		{
-			echo "<td class='formOp'></td>";
-			$jumpDown++;
-		}
-		echo "</tr><tr><td colspan='4' class='formOp'><input type='submit' name='action' value='Add Custom Shift'/></td></tr>
-		</table>
-		</form><br/><br/>";
-	}
-	
 	//Adds Multiple Shifts At Once
-	function addMShift()
+	function addMultipleChecksFunc()
 	{
 		global $shiftAddSuccess;
 		global $shiftAddNum;
@@ -946,42 +419,42 @@
 		{
 			if (!empty($_POST["employees5"]) && !empty($_POST["startTime5"]) && !empty($_POST["endTime5"]))
 			{
-				addShift($_POST["employees5"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime5"],$_POST["endTime5"]);
+				addCheckFunc($_POST["employees5"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime5"],$_POST["endTime5"]);
 			}
 			if (!empty($_POST["employees4"]) && !empty($_POST["startTime4"]) && !empty($_POST["endTime4"]))
 			{
-				addShift($_POST["employees4"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime4"],$_POST["endTime4"]);
+				addCheckFunc($_POST["employees4"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime4"],$_POST["endTime4"]);
 			}
 			if (!empty($_POST["employees3"]) && !empty($_POST["startTime3"]) && !empty($_POST["endTime3"]))
 			{
-				addShift($_POST["employees3"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime3"],$_POST["endTime3"]);
+				addCheckFunc($_POST["employees3"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime3"],$_POST["endTime3"]);
 			}
 			if (!empty($_POST["employees2"]) && !empty($_POST["startTime2"]) && !empty($_POST["endTime2"]))
 			{
-				addShift($_POST["employees2"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime2"],$_POST["endTime2"]);
+				addCheckFunc($_POST["employees2"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime2"],$_POST["endTime2"]);
 			}		
 			if (!empty($_POST["employees1"]) && !empty($_POST["startTime1"]) && !empty($_POST["endTime1"]))
 			{
-				addShift($_POST["employees1"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime1"],$_POST["endTime1"]);
+				addCheckFunc($_POST["employees1"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime1"],$_POST["endTime1"]);
 			}	
 		}
 		else
 		{
 			if (!empty($_POST["employees4"]) && !empty($_POST["startTime4"]))
 			{
-				addShift($_POST["employees4"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime4"],NULL);
+				addCheckFunc($_POST["employees4"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime4"],NULL);
 			}
 			if (!empty($_POST["employees3"]) && !empty($_POST["startTime3"]))
 			{
-				addShift($_POST["employees3"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime3"],NULL);
+				addCheckFunc($_POST["employees3"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime3"],NULL);
 			}
 			if (!empty($_POST["employees2"]) && !empty($_POST["startTime2"]))
 			{
-				addShift($_POST["employees2"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime2"],NULL);
+				addCheckFunc($_POST["employees2"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime2"],NULL);
 			}		
 			if (!empty($_POST["employees1"]) && !empty($_POST["startTime1"]))
 			{
-				addShift($_POST["employees1"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime1"],NULL);
+				addCheckFunc($_POST["employees1"],$_POST["shifts"],$_POST["appDate"],$_POST["startTime1"],NULL);
 			}	
 		}
 		//Outputs Success of Adding Shifts
@@ -1000,7 +473,7 @@
 	}
 
 	//Adds Custom Shift
-	function addCustomShift()
+	function addCustomCheckFunc()
 	{
 		global $displayMode;
 		global $connection;
@@ -1080,7 +553,7 @@
 	}
 	
 	//Add Shift
-	function addShift($employee,$shift,$date,$startTime,$endTime)
+	function addCheckFunc($employee,$shift,$date,$startTime,$endTime)
 	{
 		global $connection;
 		global $shiftAddNum;
@@ -1307,57 +780,6 @@
 				$messages .= "ERROR:All $total Locations in Shift $shiftAddNum Failed::";
 			}
 		}
-	}
+	}	
 	
-	// PAGE RUN-----------------------------------------------------------------------------
-	displayModeToggle();
-	displayHead();
-	if ($displayType == "checks")
-	{
-		checksSearch();
-		if ($fAction == "Search")
-		{
-			checksDisplay($_POST["startDate"],$_POST["endDate"],$_POST["employees"],$_POST["location"],$_POST["note"],$_POST["active"]);
-		}
-		else if (!empty($fAction) && $fAction != "Search")
-		{
-			updateResults();
-		}
-		else{}
-	}
-	else if ($displayType == "add")
-	{
-		if ($fAction == "Add Print Shifts" || $fAction == "Add Towers Shifts")
-		{
-			addMShift();
-		}
-		else if ($fAction == "Add Custom Shift")
-		{
-			addCustomShift();
-		}
-		else{}
-		if ($displayMode == "TechCons" || $displayMode == "LabCons")
-		{
-			addMPShiftForm();
-			if ($displayMode == "TechCons" && $towersActive == TRUE)	
-			{		
-				addMTShiftForm();
-			}
-			addCustomShiftForm();
-		}
-		else
-		{
-			echo "<h1>Please Select a Con Type</h1><br/><a href=checks.php?display=LabCons&menu=add><strong>LabCons Only</strong></a><br/><a href=checks.php?display=TechCons&menu=add><strong>TechCons Only</strong></a>";
-		}
-	}
-	else
-	{
-		if ($fAction == "Update")
-		{
-			updateResults();
-		}
-		checksDisplay("IGNORE",$rightNow,"IGNORE","IGNORE",NULL,1);
-	}
-	displayMessages();
-	displayFooter();
 ?>
