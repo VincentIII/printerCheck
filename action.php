@@ -30,7 +30,7 @@
 				else if ($fAction == "Delete")
 				{
 					$total++;
-					$query = "DELETE FROM checks WHERE cId=?' ";
+					$query = "DELETE FROM checks WHERE cId=? ";
 					if ($stmt=$connection->prepare($query))
 					{
 						$stmt->bind_param("i",$properKey);
