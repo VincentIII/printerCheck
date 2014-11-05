@@ -208,4 +208,14 @@
 		</form><br/><br/>";
 	}
 	
+	function consultantAdminForm()
+	{
+		echo "<h1>Add Consultant</h1>";
+		echo "<h1>Edit Consultant</h1>";
+	}
+	
+	function checkShiftForm()
+	{
+		echo "<h1>Change Shifts<h1>";
+	}
 ?>

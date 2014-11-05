@@ -371,7 +371,8 @@
 	}
 	else if ($displayType == "admin")
 	{
-		
+		consultantAdminForm();
+		checkShiftForm();
 	}
 	else
 	{
