@@ -18,114 +18,6 @@
 		</table></form>\n";
 	}
 	
-	//Creates Multiple Printer Shift Adding Form
-	function addPrinterCheckForm()
-	{
-		global $displayMode;
-		global $pageName;
-		echo "<h1>Add Print Shifts</h1>\n
-				<form action='$pageName?menu=add' id='addMPShiftForm' method='post'>
-				<table class='forms'>
-				<tr><td class='sideTH'>Shift</td><td class='formOp'>";
-		echo generateDropDowns("shifts",NULL);
-		echo "</td><td class='sideTH'>Date</td><td class='formOp'>";
-		if (!empty($_POST['appDate']))
-		{
-			$oldFormVar = $_POST["appDate"];
-			echo "<input type='date' name='appDate' value='$oldFormVar'>";
-		}
-		else
-		{
-			echo "<input type='date' name='appDate'>";
-		}
-		echo"<tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",1);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime1']) && $_POST['startTime1'] != "IGNORE")
-		{
-			$oldFormVar1 = $_POST["startTime1"];
-			echo "<input type='time' name='startTime1' value='$oldFormVar1'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime1'>\n";
-		}		
-		echo"</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",2);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime2']) && $_POST['startTime2'] != "IGNORE")
-		{
-			$oldFormVar2 = $_POST["startTime2"];
-			echo "<input type='time' name='startTime2' value='$oldFormVar2'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime2'>\n";
-		}		
-		echo"</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";		
-		echo generateDropDowns("employees",3);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime3']) && $_POST['startTime3'] != "IGNORE")
-		{
-			$oldFormVar3 = $_POST["startTime3"];
-			echo "<input type='time' name='startTime3' value='$oldFormVar3'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime3'>\n";
-		}		
-		echo"</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",4);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'>";
-		if (!empty($_POST['startTime4']) && $_POST['startTime4'] != "IGNORE")
-		{
-			$oldFormVar4 = $_POST["startTime4"];
-			echo "<input type='time' name='startTime4' value='$oldFormVar4'>\n";
-		}
-		else
-		{
-			echo "<input type='time' name='startTime4'>\n";
-		}	
-		echo "</td></tr><tr><td colspan='4' class='formOp'><input type='submit' name='action' value='Add Print Shifts'/></td></tr>
-		</table>
-		</form><br/><br/>";
-	}
-	
-	//Creates Multiple Towers Shift Adding Form
-	function addTowerCheckForm()
-	{
-		global $displayMode;
-		global $pageName;
-		echo "<h1>Add Towers Shifts</h1>\n
-				<form action='$pageName?menu=add' id='addMTShiftForm' method='post'>
-				<table class='forms'>
-				<tr><td class='sideTH' colspan='2'>Towers Only</td><td class='sideTH'>Date</td><td class='formOp'><input type='hidden' name='shifts' value='6'>";
-		if (!empty($_POST['appDate']))
-		{
-			$oldFormVar = $_POST["appDate"];
-			echo "<input type='date' name='appDate' value='$oldFormVar'>";
-		}
-		else
-		{
-			echo "<input type='date' name='appDate'>";
-		}
-		echo"<tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",1);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime1'><input type='time' name='endTime1'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",2);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime2'><input type='time' name='endTime2'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",3);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime3'><input type='time' name='endTime3'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",4);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime4'><input type='time' name='endTime4'>\n</td></tr><tr><td class='sideTH'>Employee</td><td class='formOp'>";
-		echo generateDropDowns("employees",5);
-		echo "</td><td class='sideTH'>Time</td><td class='formOp'><input type='time' name='startTime5'><input type='time' name='endTime5'>\n</td></tr>";
-		
-		echo "</td></tr><tr><td colspan='4' class='formOp'><input type='submit' name='action' value='Add Towers Shifts'/></td></tr>
-		</table>
-		</form><br/><br/>";
-	}
-	
 	//Creates Custom Shift Form (Good for Vacations/Non-Standard Shifts)
 	function addCustomCheckForm()
 	{
@@ -212,10 +104,14 @@
 	{
 		echo "<h1>Add Consultant</h1>";
 		echo "<h1>Edit Consultant</h1>";
+		echo "<h1>Delete Consultant</h1>";
+		echo "<h1>Import Consultant XML</h1>";
 	}
 	
-	function checkShiftForm()
+	function printerAdminForm()
 	{
-		echo "<h1>Change Shifts<h1>";
+		echo "<h1>Add Printer</h1>";
+		echo "<h1>Edit Printer</h1>";
+		echo "<h1>Delete Printer</h1>";
 	}
 ?>

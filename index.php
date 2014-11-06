@@ -346,22 +346,13 @@
 	}
 	else if ($displayType == "add")
 	{
-		if ($fAction == "Add Print Shifts" || $fAction == "Add Towers Shifts")
-		{
-			addMultipleChecksFunc();
-		}
-		else if ($fAction == "Add Custom Shift")
+		if ($fAction == "Add Custom Shift")
 		{
 			addCustomCheckFunc();
 		}
 		else{}
 		if ($displayMode == "TechCons" || $displayMode == "LabCons")
 		{
-			addPrinterCheckForm();
-			if ($displayMode == "TechCons" && $towersActive == TRUE)	
-			{		
-				addTowerCheckForm();
-			}
 			addCustomCheckForm();
 		}
 		else
@@ -372,7 +363,7 @@
 	else if ($displayType == "admin")
 	{
 		consultantAdminForm();
-		checkShiftForm();
+		printerAdminForm();
 	}
 	else
 	{
