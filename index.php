@@ -362,6 +362,10 @@
 	}
 	else if ($displayType == "admin")
 	{
+		if ($fAction == "Upload XML")
+		{
+			parseConsultantXML();
+		}
 		consultantAdminForm();
 		printerAdminForm();
 	}

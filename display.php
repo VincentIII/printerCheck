@@ -102,10 +102,39 @@
 	
 	function consultantAdminForm()
 	{
-		echo "<h1>Add Consultant</h1>";
-		echo "<h1>Edit Consultant</h1>";
-		echo "<h1>Delete Consultant</h1>";
-		echo "<h1>Import Consultant XML</h1>";
+		global $pageName;
+		global $displayType;
+		echo "<h1>Add Consultant</h1>
+		<form action='$pageName?menu=$displayType' id='addConsultant' method='post'>
+			<table class='forms'>
+				<tr><td class='sideTH'>First Name</td><td class='formOp'><input type='text' name='firstName'></td></tr>
+				<tr><td class='sideTH'>Last Name</td><td class='formOp'><input type='text' name='lastName'></td></tr>
+				<tr><td class='sideTH'>Username</td><td class='formOp'><input type='text' name='userName'></td></tr>
+				<tr><td class='sideTH'>Team</td><td class='formOp'>Tech <input type='radio' name='team' value='2' checked> Labs <input type='radio' name='team' value='1'></td></tr>
+				<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Add Consultant'/></td></tr>
+			</table>
+		</form>	";
+		
+		echo "<h1>Edit Consultant</h1>
+		<form action='$pageName?menu=$displayType' id='editConsultant' method='post'>
+				<table class='forms'>
+				<tr><td class='sideTH'>Employee</td><td class='formOp'>";
+		echo generateDropDowns("employees",NULL);
+		echo "</td></tr>
+		<tr><td class='sideTH'>Team</td><td class='formOp'>Tech <input type='radio' name='team' value='2' checked> Labs <input type='radio' name='team' value='1'></td></tr>
+		<tr><td class='sideTH'>Active</td><td class='formOp'>Yes <input type='radio' name='active' value='1' checked> No <input type='radio' name='active' value='0'></td></tr>
+		<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Edit Consultant'/></td></tr>
+			</table>
+		</form>	";
+		
+		echo "<h1>Import Consultant XML</h1>\n
+		<form action='$pageName?menu=admin' id='importConsultantXML' method='post' enctype='multipart/form-data'>
+			<table class='forms'>
+				<tr><td class='sideTH'>XML File</td><td class='formOp'><input type='file' name='xmlFile'></td></tr>
+				<tr><td class='sideTH'>Team</td><td class='formOp'>Tech <input type='radio' name='team' value='0' checked> Labs <input type='radio' name='team' value='1'></td></tr>
+				<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Upload XML'/></td></tr>
+			</table>
+		</form>	";
 	}
 	
 	function printerAdminForm()

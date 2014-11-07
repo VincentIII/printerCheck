@@ -489,4 +489,31 @@
 		}
 	}
 	
+	//Parses Consultant XML info and use it as the "active employee set"
+	function parseConsultantXML()
+	{
+		global $displayMode;
+		global $connection;
+		global $messages;
+		if (!empty($_FILES))
+		{
+			$employees = simplexml_load_file($_FILES['xmlFile']['tmp_name']);
+			$stmt = $connection->prepare("INSERT INTO employees (username, firstName, lastName, type, active) VALUES (?,?,?,?,?)");
+			$active = 1;
+			$stmt->bind_param('sssii',$employeeUserName,$employeeFirstName,$employeeLastName,$_POST['team'],$active);
+			foreach ($employees as $employeeInfo)
+			{
+				$name = (string)$employeeInfo->item[0];
+				if (!empty($name))
+				{
+					$nameparts = explode(", ",$name);
+					$employeeLastName = $nameparts[0];
+					$employeeFirstName = $nameparts[1];
+					$employeeEmail = (string)$employeeInfo->item[1];
+					$employeeUserName = strstr($employeeEmail, '@', true);
+					$stmt->execute();
+				}
+			}
+		}
+	}
 ?>
