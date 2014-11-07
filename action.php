@@ -834,4 +834,31 @@
 			}
 		}
 	}
-?>
+
+	//Adds Consultant Manually to Database
+	function addConsultantFunc()
+	{
+		global $displayMode;
+		global $connection;
+		global $messages;
+		$stmt = $connection->prepare("INSERT INTO employees (username, firstName, lastName, type, active) VALUES (?,?,?,?,?)");
+		$active = 1;
+		$stmt->bind_param('sssii',$_POST['userName'],$_POST['firstName'],$_POST['lastName'],$_POST['team'],$active);
+		$stmt->execute();
+	}
+	
+	//Edits Consultant in Database
+	function editConsultantFunc()
+	{
+		global $displayMode;
+		global $connection;
+		global $messages;
+		$query = "UPDATE employees SET type=?,active=? WHERE username=? ";
+		if ($stmt=$connection->prepare($query))
+		{
+			$stmt->bind_param("iis",$_POST["team"],$_POST["active"],$_POST["employees"]);
+			$stmt->execute();
+		}
+	}
+	
+	?>

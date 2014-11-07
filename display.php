@@ -144,7 +144,7 @@
 		<form action='$pageName?menu=admin' id='importConsultantXML' method='post' enctype='multipart/form-data'>
 			<table class='forms'>
 				<tr><td class='sideTH'>XML File</td><td class='formOp'><input type='file' name='xmlFile'></td></tr>
-				<tr><td class='sideTH'>Team</td><td class='formOp'>Tech <input type='radio' name='team' value='0' checked> Labs <input type='radio' name='team' value='1'></td></tr>
+				<tr><td class='sideTH'>Team</td><td class='formOp'>Tech <input type='radio' name='team' value='2' checked> Labs <input type='radio' name='team' value='1'></td></tr>
 				<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Upload Consultant XML'/></td></tr>
 			</table>
 		</form>	";
