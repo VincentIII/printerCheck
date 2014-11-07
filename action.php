@@ -489,6 +489,203 @@
 		}
 	}
 	
+	//Adds Shifts based on parseChecksXML
+	function checksXML2SQLFunc($userName,$date,$location,$startTime,$endTime)
+	{
+		global $displayMode;
+		global $connection;
+		global $messages;
+		$locations = array();
+		$total = 0;
+		$success = 0;
+		$stmt = $connection->prepare("INSERT INTO checks (locationCode, username, startTime, endTime) VALUES (?,?,?,?)");
+		
+		//Location Matching
+		if (strpos($location,"Tower") !== false)
+		{
+			if ($location == "Towers Printers")
+			{	
+				$locations[] = "towers-ss1";
+				$locations[] = "towers-ss2";
+				$locations[] = "towers-ss3";
+			}
+			else if ($location == "Towers Lobby")
+			{
+				$locations[] = "towers-desk";
+			}
+			else if ($location == "Towers")
+			{
+				$locations[] = "towers-ss1";
+				$locations[] = "towers-ss2";
+				$locations[] = "towers-ss3";
+			}
+			else{}
+		}
+		else if (strpos($location,"PA") !== false)
+		{
+			$locations[] = "pa-ss1";
+		}
+		else if (strpos($location,"Panther") !== false)
+		{
+			$locations[] = "panther-ss1";
+		}
+		else if (strpos($location,"Parran") !== false)
+		{
+			$locations[] = "parran-ss1";
+		}
+		else if (strpos($location,"Holland") !== false)
+		{
+			$locations[] = "holland-ss1";
+		}
+		else if (strpos($location,"Ruskin") !== false)
+		{
+			$locations[] = "ruskin-ss1";
+		}
+		else if (strpos($location,"Nordenberg") !== false)
+		{
+			$locations[] = "nord-ss1";
+		}
+		else if (strpos($location,"Bouquet J") !== false)
+		{
+			$locations[] = "bouquet-ss1";
+		}
+		else if (strpos($location,"Lothrop") !== false)
+		{
+			$locations[] = "lothrop-ss1";
+		}
+		else if (strpos($location,"Amos") !== false)
+		{
+			$locations[] = "amos-ss1";
+		}
+		else if (strpos($location,"Bruce") !== false)
+		{
+			$locations[] = "bruce-ss1";
+		}
+		else if (strpos($location,"Brackenridge") !== false)
+		{
+			$locations[] = "brack-ss1";
+		}
+		else if (strpos($location,"McCormick") !== false)
+		{
+			$locations[] = "mc-ss1";
+		}
+		else if (strpos($location,"iSchool") !== false)
+		{
+			$locations[] = "infosci-ss1";
+		}
+		else if (strpos($location,"O'Hara") !== false)
+		{
+			$locations[] = "ohara-ss1";
+		}
+		else if (strpos($location,"WPU") !== false)
+		{
+			$locations[] = "wpu-ss1";
+		}
+		else if (strpos($location,"Scaife") !== false)
+		{
+			$locations[] = "scaife-ss1";
+		}
+		else if (strpos($location,"Salk 2nd Floor") !== false)
+		{
+			$locations[] = "salk-ss1";
+		}
+		else if (strpos($location,"Salk 4th Floor") !== false)
+		{
+			$locations[] = "salk-ss2";
+		}
+		else if (strpos($location,"Victoria") !== false)
+		{
+			$locations[] = "victoria-ss1";
+			$locations[] = "victoria-ss2";
+		}
+		else if (strpos($location,"Posvar 1st Floor") !== false)
+		{
+			$locations[] = "phout-ss6";
+		}
+		else if (strpos($location,"Posvar 5th Floor") !== false)
+		{
+			$locations[] = "posvarsoe-ss7";
+		}
+		else if (strpos($location,"Law Building") !== false)
+		{
+			$locations[] = "law-ss1";
+		}
+		else if (strpos($location,"Sennott") !== false)
+		{
+			$locations[] = "sensq-ss1";
+		}
+		else if (strpos($location,"Forbes H") !== false)
+		{
+			$locations[] = "forbes-ss1";
+		}
+		else if (strpos($location,"Forbes T") !== false)	//Not Triggering
+		{
+			$locations[] = "forbestower-ss1";
+		}
+		else if (strpos($location,"2nd Ave") !== false)
+		{
+			$locations[] = "bridgeside-ss1";
+		}
+		else{}
+		
+		//Parsing Times & Dates
+		$startTime = str_replace(" ","",$startTime);
+		$endTime = str_replace(" ","",$endTime);
+		$month = substr($date,0,2);
+		$day = substr($date,3,2);
+		$year = substr($date,6,9);
+		$dayPart = substr($startTime,-2,2);
+		$time = substr($startTime,0,-2);
+		if (strpos($time,":") !== false)
+		{
+			$timeParts = explode(":",$time);
+			$hour = (int)$timeParts[0];
+			$minutes = (int)$timeParts[1];
+		}
+		else
+		{
+			$hour = (int)$time;
+			$minutes = "00";
+		}
+		if ($dayPart == "PM" && $hour != 12)
+		{
+			$hour += 12;
+		}
+		$startString = $year."-".$month."-".$day." ".$hour.":".$minutes.":00";
+		if (empty($endTime))
+		{
+			$hour += 2;
+		}
+		else
+		{
+			$dayPart = substr($endTime,-2,2);
+			$time = substr($endTime,0,-2);
+			if (strpos($time,":") !== false)
+			{
+				$timeParts = explode(":",$time);
+				$hour = (int)$timeParts[0];
+				$minutes = (int)$timeParts[1];
+			}
+			else
+			{
+				$hour = (int)$time;
+				$minutes = "00";
+			}
+			if ($dayPart == "PM" && $hour != 12)
+			{
+				$hour += 12;
+			}
+		}
+		$endString = $year."-".$month."-".$day." ".$hour.":".$minutes.":00";
+		$stmt->bind_param('ssss',$locationI,$userName,$startString,$endString);
+		foreach ($locations as $locationI)
+		{
+			//echo "$userName - $startString - $endString - $locationI<br>";
+			//echo "<br>";
+			$stmt->execute();
+		}
+	}
+	
 	//Parses Consultant XML info and use it as the "active employee set"
 	function parseConsultantXML()
 	{
@@ -521,118 +718,120 @@
 	function parseChecksXML()
 	{
 		global $displayMode;
+		global $messages;
+		//Fails if no file is uploaded
 		if (!empty($_FILES))
 		{
 			$checks = simplexml_load_file($_FILES['xmlFile']['tmp_name']);
-			$userName = array();
-			$date = array();
-			$startTime = array();
-			$location = array();
-			if ($displayMode == "TechCons")
+			if ($checks === false)
 			{
-				$endTime = array();
+				$messages .= "ERROR:Invalid File Uploaded::";
 			}
-			foreach ($checks as $checkInfo)
+			else
 			{
-				if ($displayMode == "LabCons")
+				if ($displayMode == "TechCons")
 				{
-					$note = (string)$checkInfo->item[4];
-					if (!empty($note))
+					$endTime = array();
+				}
+				foreach ($checks as $checkInfo)
+				{
+					if ($displayMode == "LabCons")
 					{
-						$pos1 = strpos($note,"check:");
-						$pos2 = strpos($note,"Get on the shuttle by ");
-						if ($pos1 === false && $pos2 === false){}
-						else
+						$note = (string)$checkInfo->item[4];
+						if (!empty($note))
 						{
-							if ($pos1 !== false)
+							$pos1 = strpos($note,"check:");
+							$pos2 = strpos($note,"Get on the shuttle by ");
+							if ($pos1 === false && $pos2 === false){}
+							else
 							{
-								$locations = substr($note,strpos($note,": ")+2);
+								if ($pos1 !== false)
+								{
+									$locations = substr($note,strpos($note,": ")+2);
+									while (strpos($locations,","))
+									{
+										$name = (string)$checkInfo->item[0];
+										$userName = strstr($name, '@', true);
+										$date = (string)$checkInfo->item[1];
+										$startTime = ltrim(strchr($note," check: ",true),"At ");
+										$location = substr($locations,0,strpos($locations,","));
+										$locations = substr($locations,strpos($locations,",")+2);
+										checksXML2SQLFunc($userName,$date,$location,$startTime,NULL);
+									}
+									$name = (string)$checkInfo->item[0];
+									$userName = strstr($name, '@', true);
+									$date = (string)$checkInfo->item[1];
+									$startTime = ltrim(strchr($note," check: ",true),"At ");
+									$location = substr($locations,0,-1);
+									checksXML2SQLFunc($userName,$date,$location,$startTime,NULL);
+								}
+								else if ($pos2 !== false)
+								{
+									$name = (string)$checkInfo->item[0];
+									$userName = strstr($name, '@', true);
+									$date = (string)$checkInfo->item[1];
+									$startTime = ltrim(strchr($note,",",true),"Get on the shuttle by ");
+									$location = "2nd Ave";
+									checksXML2SQLFunc($userName,$date,$location,$startTime,NULL);
+								}
+								else{}
+							}
+						}
+					}
+					else if ($displayMode == "TechCons")
+					{
+						$note = (string)$checkInfo->item[4];
+						if (!empty($note))
+						{
+							if ($note == "Printer Checks")
+							{
+								$locations = (string)$checkInfo->item[5];
 								while (strpos($locations,","))
 								{
 									$name = (string)$checkInfo->item[0];
-									$userName[] = strstr($name, '@', true);
-									$date[] = (string)$checkInfo->item[1];
-									$startTime[] = ltrim(strchr($note," check: ",true),"At ");
-									$location[] = substr($locations,0,strpos($locations,","));
+									$userName = strstr($name, '@', true);
+									$date = (string)$checkInfo->item[1];
+									$startTime = (string)$checkInfo->item[2];
+									$endTime = (string)$checkInfo->item[3];
+									$location = substr($locations,0,strpos($locations,","));
 									$locations = substr($locations,strpos($locations,",")+2);
+									checksXML2SQLFunc($userName,$date,$location,$startTime,$endTime);
 								}
 								$name = (string)$checkInfo->item[0];
-								$userName[] = strstr($name, '@', true);
-								$date[] = (string)$checkInfo->item[1];
-								$startTime[] = ltrim(strchr($note," check: ",true),"At ");
-								$location[] = substr($locations,0,-1);
+								$userName = strstr($name, '@', true);
+								$date = (string)$checkInfo->item[1];
+								$startTime = (string)$checkInfo->item[2];
+								$endTime = (string)$checkInfo->item[3];
+								$location = substr($locations,0);
+								checksXML2SQLFunc($userName,$date,$location,$startTime,$endTime);
 							}
-							else if ($pos2 !== false)
+							else if ($note == "Towers Lobby")
 							{
 								$name = (string)$checkInfo->item[0];
-								$userName[] = strstr($name, '@', true);
-								$date[] = (string)$checkInfo->item[1];
-								$startTime[] = ltrim(strchr($note,",",true),"Get on the shuttle by ");
-								$location[] = "2nd Ave";
+								$userName = strstr($name, '@', true);
+								$date = (string)$checkInfo->item[1];
+								$startTime = (string)$checkInfo->item[2];
+								$endTime = (string)$checkInfo->item[3];
+								$location = "Towers Lobby";
+								checksXML2SQLFunc($userName,$date,$location,$startTime,$endTime);
+								$towersNote = (string)$checkInfo->item[5];
+								if (!empty($towersNote))
+								{
+									$time = substr($towersNote,-4)." PM";
+									$name = (string)$checkInfo->item[0];
+									$userName = strstr($name, '@', true);
+									$date = (string)$checkInfo->item[1];
+									$location = "Towers Printers";
+									checksXML2SQLFunc($userName,$date,$location,$time,$time);
+								}
 							}
 							else{}
 						}
 					}
+					else
+					{}
 				}
-				else if ($displayMode == "TechCons")
-				{
-					$note = (string)$checkInfo->item[4];
-					if (!empty($note))
-					{
-						if ($note == "Printer Checks")
-						{
-							$locations = (string)$checkInfo->item[5];
-							while (strpos($locations,","))
-							{
-								$name = (string)$checkInfo->item[0];
-								$userName[] = strstr($name, '@', true);
-								$date[] = (string)$checkInfo->item[1];
-								$startTime[] = (string)$checkInfo->item[2];
-								$endTime[] = (string)$checkInfo->item[3];
-								$location[] = substr($locations,0,strpos($locations,","));
-								$locations = substr($locations,strpos($locations,",")+2);
-							}
-							$name = (string)$checkInfo->item[0];
-							$userName[] = strstr($name, '@', true);
-							$date[] = (string)$checkInfo->item[1];
-							$startTime[] = (string)$checkInfo->item[2];
-							$endTime[] = (string)$checkInfo->item[3];
-							$location[] = substr($locations,0);
-						}
-						else if ($note == "Towers Lobby")
-						{
-							$name = (string)$checkInfo->item[0];
-							$userName[] = strstr($name, '@', true);
-							$date[] = (string)$checkInfo->item[1];
-							$startTime[] = (string)$checkInfo->item[2];
-							$endTime[] = (string)$checkInfo->item[3];
-							$location[] = "Towers Lobby";
-							$towersNote = (string)$checkInfo->item[5];
-							if (!empty($towersNote))
-							{
-								$time = substr($towersNote,-4)." PM";
-								$name = (string)$checkInfo->item[0];
-								$userName[] = strstr($name, '@', true);
-								$date[] = (string)$checkInfo->item[1];
-								$startTime[] = $time;
-								$endTime[] = $time;
-								$location[] = "Towers Printers";
-							}
-						}
-						else{}
-					}
-				}
-				else
-				{}
 			}
-			print_r($userName);
-			echo "<br><br>";
-			print_r($date);
-			echo "<br><br>";
-			print_r($startTime);
-			echo "<br><br>";
-			print_r($location);
-			echo "<br><br>";
 		}
 	}
 ?>

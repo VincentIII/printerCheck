@@ -371,6 +371,14 @@
 		{
 			parseConsultantXML();
 		}
+		else if ($fAction == "Add Consultant")
+		{
+			addConsultantFunc();
+		}
+		else if ($fAction == "Edit Consultant")
+		{
+			editConsultantFunc();
+		}
 		consultantAdminForm();
 		//printerAdminForm();
 	}

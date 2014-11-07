@@ -22,7 +22,7 @@
 	function addXMLChecksForm()
 	{
 		global $pageName;
-		echo"<h1>Import Consultant XML</h1>\n
+		echo"<h1>Import Checks XML</h1>\n
 		<form action='$pageName?menu=add' id='importChecksXML' method='post' enctype='multipart/form-data'>
 			<table class='forms'>
 				<tr><td class='sideTH'>XML File</td><td class='formOp'><input type='file' name='xmlFile'></td></tr>
