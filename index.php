@@ -350,9 +350,14 @@
 		{
 			addCustomCheckFunc();
 		}
+		else if ($fAction == "Upload Checks XML")
+		{
+			parseChecksXML();
+		}
 		else{}
 		if ($displayMode == "TechCons" || $displayMode == "LabCons")
 		{
+			addXMLChecksForm();
 			addCustomCheckForm();
 		}
 		else
@@ -362,12 +367,12 @@
 	}
 	else if ($displayType == "admin")
 	{
-		if ($fAction == "Upload XML")
+		if ($fAction == "Upload Consultant XML")
 		{
 			parseConsultantXML();
 		}
 		consultantAdminForm();
-		printerAdminForm();
+		//printerAdminForm();
 	}
 	else
 	{

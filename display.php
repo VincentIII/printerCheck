@@ -18,6 +18,19 @@
 		</table></form>\n";
 	}
 	
+	//Imports XML File and attempts to populate checks database with it's results
+	function addXMLChecksForm()
+	{
+		global $pageName;
+		echo"<h1>Import Consultant XML</h1>\n
+		<form action='$pageName?menu=add' id='importChecksXML' method='post' enctype='multipart/form-data'>
+			<table class='forms'>
+				<tr><td class='sideTH'>XML File</td><td class='formOp'><input type='file' name='xmlFile'></td></tr>
+				<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Upload Checks XML'/></td></tr>
+			</table>
+		</form>	";
+	}
+	
 	//Creates Custom Shift Form (Good for Vacations/Non-Standard Shifts)
 	function addCustomCheckForm()
 	{
@@ -132,7 +145,7 @@
 			<table class='forms'>
 				<tr><td class='sideTH'>XML File</td><td class='formOp'><input type='file' name='xmlFile'></td></tr>
 				<tr><td class='sideTH'>Team</td><td class='formOp'>Tech <input type='radio' name='team' value='0' checked> Labs <input type='radio' name='team' value='1'></td></tr>
-				<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Upload XML'/></td></tr>
+				<tr><td colspan='2' class='formOp'><input type='submit' name='action' value='Upload Consultant XML'/></td></tr>
 			</table>
 		</form>	";
 	}
